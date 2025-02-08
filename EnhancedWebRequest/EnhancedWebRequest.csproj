@@ -7,6 +7,24 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Enhanced Web Request</Title>
     <RootNamespace>Llc.GoodConsulting.Web.EnhancedWebRequest</RootNamespace>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>https; http; rest; webapi; webrequest; httpclient; apiclient</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/alexei1983/EnhancedWebRequest</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alexei1983/EnhancedWebRequest</RepositoryUrl>
+	  <Version>1.0.5</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

@@ -988,7 +988,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <returns></returns>
         private async Task<HttpResponseMessage> InternalMakeDynamicJsonEntityRequest(string url, string method, dynamic body)
         {
-            return await PrepareInternalMakeRequest(url, method, JsonSerializer.Serialize(body, jsonOptions), MediaTypeNames.Application.Json);
+            return await PrepareInternalMakeRequest(url, method, new StringContent(JsonSerializer.Serialize(body, jsonOptions)), MediaTypeNames.Application.Json);
         }
 
         /// <summary>
