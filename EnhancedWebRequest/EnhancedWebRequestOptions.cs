@@ -54,7 +54,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <summary>
         /// Acceptable content types for the web request.
         /// </summary>
-        public string[] Accept { get; set; } = ["*"];
+        public string[] Accept { get; set; } = [];
 
         /// <summary>
         /// Whether or not to skip SSL certificate validation.
