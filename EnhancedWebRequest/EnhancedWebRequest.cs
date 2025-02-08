@@ -952,6 +952,21 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <summary>
         /// 
         /// </summary>
+        /// <typeparam name="TEntity">Type of the request entity.</typeparam>
+        /// <param name="url">URI for the request.</param>
+        /// <param name="method">HTTP method for the request.</param>
+        /// <param name="requestEntity">Request entity.</param>
+        /// <returns></returns>
+        public async Task<WebResponse?> MakeJsonEntityRequest<TEntity>(string url, string method, TEntity requestEntity)
+           where TEntity : class, new()
+        {
+            var response = await InternalMakeJsonEntityRequest(url, method, requestEntity);
+            return GetWebResponse(response);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="TEntity">Type of the entity returned from the remote endpoint on success.</typeparam>
         /// <typeparam name="TError">Type of the entity returned from the remote endpoint on error.</typeparam>
         /// <param name="url"></param>
