@@ -68,7 +68,7 @@ webReq.ErrorStatusCode += (obj, e) =>
 };
 
 var entity = new MyClass() { Prop = "value", Id = 1234 };
-var response = await webReq.PutJsonEntityIfMatch(entity, "e34ab3daa2f", false, /entity");
+var response = await webReq.PutJsonEntityIfMatch(entity, "e34ab3daa2f", false, "/entity");
 
 if (response.HasContent()) 
 {
