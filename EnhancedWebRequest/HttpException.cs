@@ -11,25 +11,25 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
     /// <param name="message"></param>
     /// <param name="response"></param>
     /// <param name="innerException"></param>
-    public class HttpException(string message, HttpResponseMessage response, Exception? innerException) : Exception(message, innerException ?? new Exception())
+    public class HttpException(string message, HttpResponseMessage? response, Exception? innerException) : Exception(message, innerException ?? new Exception())
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="message"></param>
         /// <param name="response"></param>
-        public HttpException(string message, HttpResponseMessage response) : this(message, response, null)
+        public HttpException(string message, HttpResponseMessage? response) : this(message, response, null)
         {
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public HttpStatusCode Code { get; set; } = response.StatusCode;
+        public HttpStatusCode Code { get; set; } = response?.StatusCode ?? HttpStatusCode.Continue;
 
         /// <summary>
         /// 
         /// </summary>
-        public string? Reason { get; set; } = response.ReasonPhrase;
+        public string? Reason { get; set; } = response?.ReasonPhrase;
     }
 }

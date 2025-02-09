@@ -13,7 +13,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/alexei1983/EnhancedWebRequest</PackageProjectUrl>
     <RepositoryUrl>https://github.com/alexei1983/EnhancedWebRequest</RepositoryUrl>
-	  <Version>1.0.7</Version>
+	  <Version>1.1.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
