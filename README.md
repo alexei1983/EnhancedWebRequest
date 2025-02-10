@@ -21,7 +21,8 @@ Assuming we have an existing `HttpClient` object called `httpClient` and an enti
 ```
 var webReq = new EnhancedWebRequest(httpClient);
 var entity = new MyClass() { Prop = "value", Id = 1234 };
-var updatedEntity = await webReq.PutJsonEntity<MyClass>(entity, $"https://api.example.com/rest/entity/{entity.Id}");
+var response = await webReq.PutJsonEntity(entity, $"https://api.example.com/rest/entity/{entity.Id}");
+var updatedEntity = await response.AsJsonEntityAsync<MyClass>();
 ```
 
 Methods with an optional `url` parameter handle the value of that parameter as follows:
@@ -37,7 +38,7 @@ This package provides a number of useful extension methods for working with the 
 
 In the examples below, assume we already have an instance of the `EnhancedWebRequest` class called `webReq` with a base URI of `https://api.example.com/rest` set.
 
-To de-serialize a response from JSON into a list of objects of type `MyClass`:
+To de-serialize a response from JSON into a list of objects of type `MyClass` with a conditional request:
 
 ```
 webReq.NotModified += (obj, e) => 

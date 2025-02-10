@@ -8,30 +8,8 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
     /// <summary>
     /// 
     /// </summary>
-    public static class Extensions
+    public static class EnhancedWebRequestExtensionMethods
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TResponse">Type of the entity to de-serialize from JSON.</typeparam>
-        /// <param name="response">Response received from a remote HTTP endpoint.</param>
-        /// <param name="serializerSettings">JSON deserialization options and settings.</param>
-        /// <returns><seealso cref="Task{TResponse}"/> containing the response entity de-serialized from JSON.</returns>
-        public async static Task<TResponse?> ReadFromJsonAsync<TResponse>(this HttpResponseMessage response, JsonSerializerOptions? serializerSettings = null)
-        {
-            if (response is null)
-                return default;
-
-            serializerSettings ??= JsonSerializerOptions.Default;
-
-            var jsonStr = await response.Content.ReadAsStringAsync();
-
-            if (!string.IsNullOrEmpty(jsonStr))
-                return JsonSerializer.Deserialize<TResponse>(jsonStr, serializerSettings);
-
-            return default;
-        }
-
         /// <summary>
         /// 
         /// </summary>
