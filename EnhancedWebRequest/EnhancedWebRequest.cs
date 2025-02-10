@@ -120,7 +120,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <returns></returns>
         public async Task<HttpResponseMessage> PatchJsonEntity<TEntity>(TEntity entity, string? url) where TEntity : class, new()
         {
-            var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url)).WithJsonEntity(entity);
+            var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
             return await Execute(request);
         }
 
@@ -133,7 +133,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <returns></returns>
         public async Task<HttpResponseMessage> PostJsonEntity<TEntity>(TEntity entity, string? url = null) where TEntity : class, new()
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithJsonEntity(entity);
+            var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
             return await Execute(request);
         }
 
@@ -146,7 +146,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <returns></returns>
         public async Task<HttpResponseMessage> PutJsonEntity<TEntity>(TEntity entity, string? url = null) where TEntity : class, new()
         {
-            var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url)).WithJsonEntity(entity);
+            var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
             return await Execute(request);
         }
 
@@ -162,7 +162,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> PutJsonEntityIfMatch<TEntity>(TEntity entity, string eTag, bool weakTag = true, string? url = null)
             where TEntity : class, new()
         {
-            var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url)).WithJsonEntity(entity)
+            var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url)).WithJsonEntity(entity, jsonOptions)
                                                                              .IfMatch(eTag, weakTag);
             return await Execute(request);
         }
@@ -179,7 +179,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> PatchJsonEntityIfMatch<TEntity>(TEntity entity, string eTag, bool weakTag = true, string? url = null)
             where TEntity : class, new()
         {
-            var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url)).WithJsonEntity(entity)
+            var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url)).WithJsonEntity(entity, jsonOptions)
                                                                                .IfMatch(eTag, weakTag);
             return await Execute(request);
         }
@@ -196,7 +196,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> PostJsonEntityIfNoneMatch<TEntity>(TEntity entity, string eTag, bool weakTag = true, string? url = null)
             where TEntity : class, new()
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithJsonEntity(entity)
+            var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithJsonEntity(entity, jsonOptions)
                                                                               .IfNoneMatch(eTag, weakTag);
             return await Execute(request);
         }
@@ -213,7 +213,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url))
-                              .WithJsonEntity(entity)
+                              .WithJsonEntity(entity, jsonOptions)
                               .IfUnmodifiedSince(unmodifiedSince);
             return await Execute(request);
         }
@@ -230,7 +230,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url))
-                              .WithJsonEntity(entity)
+                              .WithJsonEntity(entity, jsonOptions)
                               .IfUnmodifiedSince(unmodifiedSince);
             return await Execute(request);
         }
