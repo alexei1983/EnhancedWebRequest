@@ -686,21 +686,27 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
                 Url = url
             });
 
-            OnNotModified(new NotModifiedEventArgs()
+            if (status == HttpStatusCode.NotModified)
             {
-                HttpMethod = method,
-                Url = url
-            });
+                OnNotModified(new NotModifiedEventArgs()
+                {
+                    HttpMethod = method,
+                    Url = url
+                });
+            }
 
-            OnErrorStatusCode(new ErrorStatusCodeEventArgs()
+            if (!response.IsSuccessStatusCode)
             {
-                ContentType = contentType,
-                HttpMethod = method,
-                StatusCode = status,
-                StatusReason = statusReason,
-                ResponseMessage = response,
-                Url = url
-            });
+                OnErrorStatusCode(new ErrorStatusCodeEventArgs()
+                {
+                    ContentType = contentType,
+                    HttpMethod = method,
+                    StatusCode = status,
+                    StatusReason = statusReason,
+                    ResponseMessage = response,
+                    Url = url
+                });
+            }
         }
 
         #endregion
