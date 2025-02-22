@@ -168,9 +168,10 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <exception cref="HttpException"></exception>
         public static HttpResponseMessage ExpectStatus(this HttpResponseMessage message, HttpStatusCode status) 
         {
-            if (message is not null && message.StatusCode == status)
+            ArgumentNullException.ThrowIfNull(message);
+            if (message.StatusCode == status)
                 return message;
-            throw new HttpException($"Unexpected status code in response: {message?.StatusCode}", message);
+            throw new HttpException($"Unexpected HTTP status code in response: {message?.StatusCode}", message);
         }
 
         /// <summary>
@@ -183,9 +184,10 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <exception cref="HttpException"></exception>
         public static HttpResponseMessage ExpectStatusIn(this HttpResponseMessage message, params HttpStatusCode[] statuses) 
         {
-            if (message is not null && statuses.Contains(message.StatusCode))
+            ArgumentNullException.ThrowIfNull(message);
+            if (statuses.Contains(message.StatusCode))
                 return message;
-            throw new HttpException($"Unexpected status code in response: {message?.StatusCode}", message);
+            throw new HttpException($"Unexpected HTTP status code in response: {message?.StatusCode}", message);
         }
 
         /// <summary>
@@ -229,7 +231,22 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         {
             if (message is not null && message.IsSuccessStatusCode)
                 return message;
-            throw new HttpException($"Unexpected status code in response: {message?.StatusCode}", message);
+            throw new HttpException($"Unexpected HTTP status code in response: {message?.StatusCode}", message);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="statuses"></param>
+        /// <returns></returns>
+        /// <exception cref="HttpException"></exception>
+        public static HttpResponseMessage ExpectSuccessOrStatusIn(this HttpResponseMessage message, params HttpStatusCode[] statuses)
+        {
+            ArgumentNullException.ThrowIfNull(message);
+            if (message.IsSuccessStatusCode || statuses.Contains(message.StatusCode))
+                return message;
+            throw new HttpException($"Unexpected HTTP status code in response: {message?.StatusCode}", message);
         }
 
         /// <summary>
@@ -350,6 +367,24 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             ArgumentNullException.ThrowIfNull(message);
             return message.Headers.Where(h => h.Key.Equals(headerKey, keyStringComparison))
                                   .Any(h => h.Value.Any(v => headerValue.Equals(v, valueStringComparison)));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="headerKey"></param>
+        /// <param name="headerValues"></param>
+        /// <param name="keyStringComparison"></param>
+        /// <param name="valueStringComparison"></param>
+        /// <returns></returns>
+        public static bool HasAllHeaderValues(this HttpResponseMessage message, string headerKey, IEnumerable<string> headerValues,
+                                              StringComparison keyStringComparison = StringComparison.OrdinalIgnoreCase,
+                                              StringComparison valueStringComparison = StringComparison.OrdinalIgnoreCase)
+        {
+            ArgumentNullException.ThrowIfNull(message);
+            return message.Headers.Where(h => h.Key.Equals(headerKey, keyStringComparison))
+                                  .All(h => h.Value.All(hv => headerValues.Any(hvv => hvv.Equals(hv, valueStringComparison))));
         }
 
         /// <summary>

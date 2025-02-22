@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 
@@ -50,7 +51,15 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <summary>
         /// HTTP Authorization header name.
         /// </summary>
-        const string AUTH_HEADER = "Authorization";
+        const string HEADER_AUTHORIZATION = "Authorization";
+
+        const string HEADER_AC_REQUEST_HEADERS = "Access-Control-Request-Headers";
+        const string HEADER_AC_REQUEST_METHOD = "Access-Control-Request-Method";
+        const string HEADER_ORIGIN = "Origin";
+        const string HEADER_AC_MAX_AGE = "Access-Control-Max-Age";
+        const string HEADER_AC_ALLOW_HEADERS = "Access-Control-Allow-Headers";
+        const string HEADER_AC_ALLOW_METHODS = "Access-Control-Allow-Methods";
+        const string HEADER_AC_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
 
         /// <summary>
         /// HTTP basic authentication type.
@@ -377,6 +386,40 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
 
         #endregion
 
+        #region CORS
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="origin"></param>
+        /// <param name="requestMethod"></param>
+        /// <param name="requestHeaders"></param>
+        /// <returns></returns>
+        /// <exception cref="HttpException"></exception>
+        public async Task<bool> CorsPreflight(string? url, string origin, string requestMethod, params string[] requestHeaders)
+        {
+            var request = GetRequest(HttpMethod.Options, url)
+                          .WithHeader(HEADER_ORIGIN, origin)
+                          .WithHeader(HEADER_AC_REQUEST_METHOD, requestMethod.ToUpper());
+
+            if (requestHeaders is not null && requestHeaders.Length > 0)
+                request = request.WithHeader(HEADER_AC_REQUEST_HEADERS, string.Join(",", requestHeaders));
+
+            var response = await internalClient.SendAsync(request);
+            response.OnStatus((_) =>
+            {
+                throw new HttpException("Cannot retrieve CORES preflight headers: OPTIONS method is not allowed.", response);
+            },
+                HttpStatusCode.MethodNotAllowed);
+            return (response.HasHeaderValue(HEADER_AC_ALLOW_METHODS, requestMethod) || !response.HasHeader(HEADER_AC_ALLOW_METHODS)) &&
+                   (response.HasHeaderValue(HEADER_AC_ALLOW_ORIGIN, origin) || response.HasHeaderValue(HEADER_AC_ALLOW_ORIGIN, "*") ||
+                   !response.HasHeader(HEADER_AC_ALLOW_ORIGIN)) && (!response.HasHeader(HEADER_AC_ALLOW_HEADERS) ||
+                   response.HasAllHeaderValues(HEADER_AC_ALLOW_HEADERS, requestHeaders ?? []));
+        }
+
+        #endregion
+
         #region HttpContent Methods
 
         /// <summary>
@@ -613,7 +656,6 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <summary>
         /// Creates an appropriate <seealso cref="HttpClient"/> object to use in the web request.
         /// </summary>
-        /// <param name="url">Base URL for the client.</param>
         /// <returns><seealso cref="HttpClient"/> object.</returns>
         HttpClient GetClient(EnhancedWebRequestOptions? options = null, HttpClientHandler? clientHandler = null)
         {
@@ -673,13 +715,13 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
                     if (options.AuthorizationType == AuthorizationType.Basic &&
                         !string.IsNullOrEmpty(options.Username) &&
                         !string.IsNullOrEmpty(options.Password))
-                        client.DefaultRequestHeaders.Add(AUTH_HEADER,
+                        client.DefaultRequestHeaders.Add(HEADER_AUTHORIZATION,
                                                          $"{AUTH_BASIC} {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{options.Username}:{options.Password}"))}");
                     else if (options.AuthorizationType == AuthorizationType.BearerToken && !string.IsNullOrEmpty(options.BearerToken))
-                        client.DefaultRequestHeaders.Add(AUTH_HEADER,
+                        client.DefaultRequestHeaders.Add(HEADER_AUTHORIZATION,
                                                          $"{AUTH_BEARER} {options.BearerToken}");
                     else if (options.AuthorizationType == AuthorizationType.Custom && !string.IsNullOrEmpty(options.CustomAuthorizationType) && !string.IsNullOrEmpty(options.CustomAuthorizationValue))
-                        client.DefaultRequestHeaders.Add(AUTH_HEADER,
+                        client.DefaultRequestHeaders.Add(HEADER_AUTHORIZATION,
                                                          $"{options.CustomAuthorizationType} {options.CustomAuthorizationValue}");
                 }
             }
