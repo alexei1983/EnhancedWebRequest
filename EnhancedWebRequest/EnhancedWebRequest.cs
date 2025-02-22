@@ -30,7 +30,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public event EventHandler<ErrorStatusCodeEventArgs>? ErrorStatusCode;
 
         /// <summary>
-        /// Event raised when a remote HTTP endpoints indicates that content has not been modified.
+        /// Event raised when a remote HTTP endpoint indicates that content has not been modified.
         /// </summary>
         public event EventHandler<NotModifiedEventArgs>? NotModified;
 
@@ -68,6 +68,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
 
         readonly HttpClient internalClient;
         readonly JsonSerializerOptions jsonOptions = JsonSerializerOptions.Default;
+        readonly bool disposeHttpClient = false;
 
         #endregion
 
@@ -77,8 +78,26 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// 
         /// </summary>
         /// <param name="httpClient"></param>
-        public EnhancedWebRequest(HttpClient httpClient)
+        public EnhancedWebRequest(HttpClient httpClient) : this(httpClient, JsonSerializerOptions.Default)
         {
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientHandler"></param>
+        public EnhancedWebRequest(HttpClientHandler clientHandler) : this(clientHandler, JsonSerializerOptions.Default)
+        {
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="jsonOptions"></param>
+        public EnhancedWebRequest(HttpClient httpClient, JsonSerializerOptions? jsonOptions)
+        {
+            this.jsonOptions = jsonOptions ?? JsonSerializerOptions.Default;
             internalClient = httpClient;
             BaseUrl = httpClient.BaseAddress?.ToString() ?? string.Empty;
         }
@@ -87,10 +106,12 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// 
         /// </summary>
         /// <param name="clientHandler"></param>
-        public EnhancedWebRequest(HttpClientHandler clientHandler)
+        public EnhancedWebRequest(HttpClientHandler clientHandler, JsonSerializerOptions? jsonOptions)
         {
+            this.jsonOptions = jsonOptions ?? JsonSerializerOptions.Default;
             internalClient = GetClient(null, clientHandler);
             BaseUrl = internalClient.BaseAddress?.ToString() ?? string.Empty;
+            disposeHttpClient = true;
         }
 
         /// <summary>
@@ -105,6 +126,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             BaseUrl = baseUrl;
             internalClient = GetClient(options, null);
             jsonOptions = options.JsonSerializerSettings;
+            disposeHttpClient = true;
         }
 
         #endregion
@@ -122,6 +144,47 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         {
             var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
             return await Execute(request);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> DeleteJsonEntity<TEntity>(TEntity entity, string? url) where TEntity : class, new()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
+            return await Execute(request);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<TEntity?> GetJsonEntity<TEntity>(string? url) where TEntity : class, new()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url));
+            var response = await Execute(request);
+            response.ExpectSuccess();
+            return await response.AsJsonEntityAsync<TEntity>();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<List<TEntity>> GetJsonEntities<TEntity>(string? url) where TEntity : class, new()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url));
+            var response = await Execute(request);
+            response.ExpectSuccess();
+            return await response.AsJsonEntitiesAsync<TEntity>();
         }
 
         /// <summary>
@@ -263,6 +326,18 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> Delete(string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, GetUrl(url));
+            return await Execute(request);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="queryParameters"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> Delete(IDictionary<string, string> queryParameters, string? url = null)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, GetUrl(url)).WithQueryString(queryParameters);
             return await Execute(request);
         }
 
@@ -542,24 +617,21 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <returns><seealso cref="HttpClient"/> object.</returns>
         HttpClient GetClient(EnhancedWebRequestOptions? options = null, HttpClientHandler? clientHandler = null)
         {
-            if (clientHandler != null)
-                return new HttpClient(clientHandler);
-
             options ??= new EnhancedWebRequestOptions();
 
-            var handler = new HttpClientHandler() { UseDefaultCredentials = false };
+            clientHandler ??= new HttpClientHandler() { UseDefaultCredentials = false };
 
             if (options.SkipCertificateValidation)
             {
-                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                handler.ServerCertificateCustomValidationCallback =
+                clientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                clientHandler.ServerCertificateCustomValidationCallback =
                     (httpRequestMessage, cert, cetChain, policyErrors) =>
                     {
                         return true;
                     };
             }
 
-            var client = new HttpClient(handler);
+            var client = new HttpClient(clientHandler);
 
             try
             {
@@ -778,7 +850,8 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// </summary>
         public void Dispose()
         {
-            internalClient?.Dispose();
+            if (disposeHttpClient)
+                internalClient?.Dispose();
             GC.SuppressFinalize(this);
         }
 
