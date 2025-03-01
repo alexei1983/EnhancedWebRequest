@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Llc.GoodConsulting.Web.EnhancedWebRequest
+namespace Llc.GoodConsulting.Web
 {
     /// <summary>
     /// 

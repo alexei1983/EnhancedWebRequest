@@ -1,7 +1,7 @@
 ﻿
 using System.Net;
 
-namespace Llc.GoodConsulting.Web.EnhancedWebRequest
+namespace Llc.GoodConsulting.Web
 {
     /// <summary>
     /// Event data associated with a specific HTTP response received from a remote endpoint.

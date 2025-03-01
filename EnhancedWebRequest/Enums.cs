@@ -1,5 +1,5 @@
 ﻿
-namespace Llc.GoodConsulting.Web.EnhancedWebRequest
+namespace Llc.GoodConsulting.Web
 {
     /// <summary>
     /// Type of authentication for an HTTP web request.

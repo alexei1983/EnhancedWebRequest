@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 
-namespace Llc.GoodConsulting.Web.EnhancedWebRequest
+namespace Llc.GoodConsulting.Web
 {
     /// <summary>
     /// 
@@ -70,6 +70,31 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// 
         /// </summary>
         public string? Password { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string? ProxyAddress { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int? ProxyPort { get; set; }
+
+        /// <summary>
+        /// Username for basic HTTP authentication.
+        /// </summary>
+        public string? ProxyUsername { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string? ProxyPassword { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool ProxyBypassLocal { get; set; }
 
         /// <summary>
         /// Security protocol settings for the web request.

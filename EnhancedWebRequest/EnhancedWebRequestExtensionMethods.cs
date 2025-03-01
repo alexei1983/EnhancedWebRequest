@@ -3,10 +3,10 @@ using System.Net.Mime;
 using System.Net.Http.Headers;
 using System.Net;
 
-namespace Llc.GoodConsulting.Web.EnhancedWebRequest
+namespace Llc.GoodConsulting.Web
 {
     /// <summary>
-    /// 
+    /// Extension methods for working with <see cref="HttpRequestMessage"/> and <see cref="HttpResponseMessage"/> objects.
     /// </summary>
     public static class EnhancedWebRequestExtensionMethods
     {
@@ -536,6 +536,73 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// 
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="origin"></param>
+        /// <returns></returns>
+        public static HttpRequestMessage WithOrigin(this HttpRequestMessage message, string origin)
+        {
+            ArgumentNullException.ThrowIfNull(message);
+            if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                throw new ArgumentException($"Invalid HTTP origin: {origin}");
+            return message.WithOrigin(uri);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="proxyAddress"></param>
+        /// <param name="proxyUsername"></param>
+        /// <param name="proxyPassword"></param>
+        /// <param name="bypassLocal"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static HttpClientHandler WithProxy(this HttpClientHandler handler, string proxyAddress, string? proxyUsername = null, string? proxyPassword = null, bool bypassLocal = true, int? port = null)
+        {
+            ArgumentNullException.ThrowIfNull(handler);
+            WebProxy proxy;
+            if (port.HasValue)
+            {
+                if (port.Value < 1 || port.Value > ushort.MaxValue)
+                    throw new ArgumentException($"Invalid proxy port: {port.Value}", nameof(port));
+
+                proxy = new WebProxy(proxyAddress, port.Value);
+            }
+            else
+            {
+                proxy = new WebProxy(proxyAddress);
+            }
+
+            if (!string.IsNullOrEmpty(proxyUsername))
+            {
+                var credentials = new NetworkCredential(proxyUsername, proxyPassword);
+                proxy.Credentials = credentials;
+                proxy.UseDefaultCredentials = false;
+            }
+
+            proxy.BypassProxyOnLocal = bypassLocal;
+
+            handler.Proxy = proxy;
+            handler.UseProxy = true;
+            return handler;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="origin"></param>
+        /// <returns></returns>
+        public static HttpRequestMessage WithOrigin(this HttpRequestMessage message, Uri origin)
+        {
+            ArgumentNullException.ThrowIfNull(message);
+            return message.WithHeader("Origin", origin.ToString());
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
         /// <param name="headerKey"></param>
         /// <param name="headerValues"></param>
         /// <returns></returns>
@@ -712,21 +779,39 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <param name="message"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static HttpRequestMessage WithFormValues(this HttpRequestMessage message, IDictionary<string, string> values)
+        /// <exception cref="InvalidOperationException"></exception>
+        public static HttpRequestMessage WithFormDataValues(this HttpRequestMessage message, IDictionary<string, string> values)
+        {
+            ArgumentNullException.ThrowIfNull(message);
+
+            var content = message.Content ?? new MultipartFormDataContent();
+
+            if (content is MultipartFormDataContent multiPartForm)
+            {
+                foreach (var value in values)
+                    multiPartForm.Add(new StringContent(value.Value), value.Key);
+
+                message.Content = multiPartForm;
+            }
+            else
+                throw new InvalidOperationException("Cannot append form data values to existing content: incompatible content type.");
+
+            return message;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static HttpRequestMessage WithUrlEncodedFormValues(this HttpRequestMessage message, IDictionary<string, string> values)
         {
             ArgumentNullException.ThrowIfNull(message);
             if (message.Content is null)
-            {
                 message.Content = new FormUrlEncodedContent(values);
-                if (message.Content.Headers.ContentType == null)
-                    message.Content.Headers.ContentType = new MediaTypeHeaderValue(MediaTypeNames.Application.FormUrlEncoded);
-            }
             else if (message.Content is MultipartContent multiPart)
-            {
-                var formContent = new FormUrlEncodedContent(values); ;
-                formContent.Headers.ContentType = new MediaTypeHeaderValue(MediaTypeNames.Application.FormUrlEncoded);
-                multiPart.Add(formContent);
-            }
+                multiPart.Add(new FormUrlEncodedContent(values));
             else
                 throw new InvalidOperationException("Cannot append URL-encoded form values to existing content: incompatible content type.");
 

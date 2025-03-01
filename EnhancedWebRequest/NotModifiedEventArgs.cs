@@ -1,6 +1,6 @@
 ﻿
 
-namespace Llc.GoodConsulting.Web.EnhancedWebRequest
+namespace Llc.GoodConsulting.Web
 {
     /// <summary>
     /// Event data associated with an indication that content has not been modified on a remote HTTP endpoint.

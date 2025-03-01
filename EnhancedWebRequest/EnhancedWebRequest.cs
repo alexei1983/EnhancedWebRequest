@@ -2,11 +2,10 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Mime;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 
-namespace Llc.GoodConsulting.Web.EnhancedWebRequest
+namespace Llc.GoodConsulting.Web
 {
     /// <summary>
     /// A utility class for interacting with HTTP web services.
@@ -152,7 +151,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> PatchJsonEntity<TEntity>(TEntity entity, string? url) where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -165,7 +164,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> DeleteJsonEntity<TEntity>(TEntity entity, string? url) where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -177,9 +176,24 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<TEntity?> GetJsonEntity<TEntity>(string? url) where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url));
-            var response = await Execute(request);
+            var response = await ExecuteInternal(request);
             response.ExpectSuccess();
-            return await response.AsJsonEntityAsync<TEntity>();
+            return await response.AsJsonEntityAsync<TEntity>(jsonOptions);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="queryParameters"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<TEntity?> GetJsonEntity<TEntity>(IDictionary<string, string> queryParameters, string? url) where TEntity : class, new()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url)).WithQueryString(queryParameters);
+            var response = await ExecuteInternal(request);
+            response.ExpectSuccess();
+            return await response.AsJsonEntityAsync<TEntity>(jsonOptions);
         }
 
         /// <summary>
@@ -191,9 +205,24 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<List<TEntity>> GetJsonEntities<TEntity>(string? url) where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url));
-            var response = await Execute(request);
+            var response = await ExecuteInternal(request);
             response.ExpectSuccess();
-            return await response.AsJsonEntitiesAsync<TEntity>();
+            return await response.AsJsonEntitiesAsync<TEntity>(jsonOptions);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="queryParameters"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<List<TEntity>> GetJsonEntities<TEntity>(IDictionary<string, string> queryParameters, string? url) where TEntity : class, new()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url)).WithQueryString(queryParameters);
+            var response = await ExecuteInternal(request);
+            response.ExpectSuccess();
+            return await response.AsJsonEntitiesAsync<TEntity>(jsonOptions);
         }
 
         /// <summary>
@@ -206,7 +235,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> PostJsonEntity<TEntity>(TEntity entity, string? url = null) where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -219,7 +248,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> PutJsonEntity<TEntity>(TEntity entity, string? url = null) where TEntity : class, new()
         {
             var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url)).WithJsonEntity(entity, jsonOptions);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -236,7 +265,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         {
             var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url)).WithJsonEntity(entity, jsonOptions)
                                                                              .IfMatch(eTag, weakTag);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -253,7 +282,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         {
             var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url)).WithJsonEntity(entity, jsonOptions)
                                                                                .IfMatch(eTag, weakTag);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -270,7 +299,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         {
             var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithJsonEntity(entity, jsonOptions)
                                                                               .IfNoneMatch(eTag, weakTag);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -287,7 +316,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             var request = new HttpRequestMessage(HttpMethod.Put, GetUrl(url))
                               .WithJsonEntity(entity, jsonOptions)
                               .IfUnmodifiedSince(unmodifiedSince);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -304,7 +333,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             var request = new HttpRequestMessage(HttpMethod.Patch, GetUrl(url))
                               .WithJsonEntity(entity, jsonOptions)
                               .IfUnmodifiedSince(unmodifiedSince);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         #endregion
@@ -335,7 +364,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> Delete(string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, GetUrl(url));
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -347,7 +376,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> Delete(IDictionary<string, string> queryParameters, string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, GetUrl(url)).WithQueryString(queryParameters);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -358,7 +387,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> Options(string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Options, GetUrl(url));
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -375,13 +404,47 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="values"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> ExecuteAsync(HttpRequestMessage request)
+        {
+            return await ExecuteInternal(request);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public HttpResponseMessage Execute(HttpRequestMessage request)
+        {
+            return ExecuteInternal(request).Result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="formValues"></param>
         /// <param name="url"></param>
         /// <returns></returns>
-        public async Task<HttpResponseMessage> PostForm(IDictionary<string, string> values, string? url = null)
+        public async Task<HttpResponseMessage> PostForm(IDictionary<string, string> formValues, string? url = null)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithFormValues(values);
-            return await Execute(request);
+            var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithUrlEncodedFormValues(formValues);
+            return await ExecuteInternal(request);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="formValues"></param>
+        /// <param name="queryParameters"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> PostForm(IDictionary<string, string> formValues, IDictionary<string, string> queryParameters, string? url = null)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, GetUrl(url)).WithUrlEncodedFormValues(formValues)
+                                                                              .WithQueryString(queryParameters);
+            return await ExecuteInternal(request);
         }
 
         #endregion
@@ -400,13 +463,13 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<bool> CorsPreflight(string? url, string origin, string requestMethod, params string[] requestHeaders)
         {
             var request = GetRequest(HttpMethod.Options, url)
-                          .WithHeader(HEADER_ORIGIN, origin)
+                          .WithOrigin(origin)
                           .WithHeader(HEADER_AC_REQUEST_METHOD, requestMethod.ToUpper());
 
             if (requestHeaders is not null && requestHeaders.Length > 0)
                 request = request.WithHeader(HEADER_AC_REQUEST_HEADERS, string.Join(",", requestHeaders));
 
-            var response = await internalClient.SendAsync(request);
+            var response = await ExecuteInternal(request);
             response.OnStatus((_) =>
             {
                 throw new HttpException("Cannot retrieve CORES preflight headers: OPTIONS method is not allowed.", response);
@@ -435,7 +498,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             }.IfModifiedSince(ifModifiedSince);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -451,7 +514,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             }.IfUnmodifiedSince(ifUnmodifiedSince);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -468,7 +531,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             }.IfNoneMatch(matchTag, weakTag);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -485,7 +548,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             }.IfMatch(matchTag, weakTag);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -500,7 +563,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             };
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -515,7 +578,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             };
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -530,7 +593,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             };
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -545,7 +608,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             {
                 Content = content
             };
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         #endregion
@@ -560,7 +623,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> Get(string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url));
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -572,7 +635,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> Get(IDictionary<string, string> queryParameters, string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url)).WithQueryString(queryParameters);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -584,7 +647,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> GetIfModifiedSince(DateTimeOffset ifModifiedSince, string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url)).IfModifiedSince(ifModifiedSince);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -598,7 +661,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url)).WithQueryString(queryParameters)
                                                                              .IfModifiedSince(ifModifiedSince);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -611,7 +674,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         public async Task<HttpResponseMessage> GetIfNoneMatch(string matchTag, bool weakTag = true, string? url = null)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url)).IfNoneMatch(matchTag, weakTag);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         /// <summary>
@@ -626,7 +689,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         {
             var request = new HttpRequestMessage(HttpMethod.Get, GetUrl(url)).WithQueryString(queryParameters)
                                                                              .IfNoneMatch(matchTag, weakTag);
-            return await Execute(request);
+            return await ExecuteInternal(request);
         }
 
         #endregion
@@ -642,11 +705,41 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// <param name="fileKey"></param>
         /// <param name="url"></param>
         /// <returns></returns>
-        public async Task<HttpResponseMessage> PostMultipartFormFile(byte[] fileContents, string fileContentType, string filename, string fileKey, string? url = null)
+        public async Task<HttpResponseMessage> PostMultipartFormFile(byte[] fileContents,
+                                                                     string fileContentType,
+                                                                     string filename,
+                                                                     string fileKey,
+                                                                     string? url = null)
         {
             var request = GetRequest(HttpMethod.Post, url)
                           .WithMultipartFormFile(fileContents, fileContentType, filename, fileKey);
-            return await Execute(request);
+            return await ExecuteInternal(request);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileContents"></param>
+        /// <param name="fileContentType"></param>
+        /// <param name="filename"></param>
+        /// <param name="fileKey"></param>
+        /// <param name="formValues"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> PostMultipartFormFile(byte[] fileContents,
+                                                                     string fileContentType,
+                                                                     string filename,
+                                                                     string fileKey,
+                                                                     IDictionary<string, string> formValues,
+                                                                     string? url = null)
+        {
+            var request = GetRequest(HttpMethod.Post, url)
+                          .WithMultipartFormFile(fileContents, fileContentType, filename, fileKey);
+        
+            if (formValues is not null && formValues.Count > 0)
+                request = request.WithFormDataValues(formValues);
+
+            return await ExecuteInternal(request);
         }
 
         #endregion
@@ -662,6 +755,10 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
             options ??= new EnhancedWebRequestOptions();
 
             clientHandler ??= new HttpClientHandler() { UseDefaultCredentials = false };
+
+            if (!string.IsNullOrEmpty(options.ProxyAddress))
+                clientHandler = clientHandler.WithProxy(options.ProxyAddress, options.ProxyUsername, options.ProxyPassword,
+                                                        options.ProxyBypassLocal, options.ProxyPort);
 
             if (options.SkipCertificateValidation)
             {
@@ -737,7 +834,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        async Task<HttpResponseMessage> Execute(HttpRequestMessage request)
+        async Task<HttpResponseMessage> ExecuteInternal(HttpRequestMessage request)
         {
             OnRequestSent(request);
             var response = await internalClient.SendAsync(request);
@@ -809,7 +906,7 @@ namespace Llc.GoodConsulting.Web.EnhancedWebRequest
                 });
             }
 
-            if (!response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode && status != HttpStatusCode.NotModified)
             {
                 OnErrorStatusCode(new ErrorStatusCodeEventArgs()
                 {
